@@ -1,13 +1,15 @@
 import { Pool } from "pg";
+import dotenv from 'dotenv';
+dotenv.config();
+
+const db_schema = process.env.DB_SCHEMA;
 
 export class Fav {
     username: string;
     team_id: string;
-    sport: string;
-    constructor(username: string, team_id: string, sport: string) {
+    constructor(username: string, team_id: string) {
         this.username = username;
         this.team_id = team_id;
-        this.sport = sport;
     }
 }
 
@@ -21,8 +23,8 @@ export class FavDAO {
 
     async addFav(fav: Fav): Promise<void> {
         const query = `
-            INSERT INTO achastang_schema.fp_favs (username, team_id, sport)
-            VALUES ('${fav.username}', '${fav.team_id}', '${fav.sport}')
+            INSERT INTO '${db_schema}'.fp_favs (username, team_id, sport)
+            VALUES ('${fav.username}', '${fav.team_id}')
             ON CONFLICT DO NOTHING
         `;
         await this.pg_pool.query(query);
@@ -30,16 +32,16 @@ export class FavDAO {
 
     async removeFav(fav: Fav): Promise<void> {
         const query = `
-            DELETE FROM achastang_schema.fp_favs
-            WHERE username = '${fav.username}' AND team_id = '${fav.team_id}' AND sport = '${fav.sport}'
+            DELETE FROM '${db_schema}'.fp_favs
+            WHERE username = '${fav.username}' AND team_id = '${fav.team_id}'
         `;
         await this.pg_pool.query(query);
     }
 
     async getFavsByUsername(username: string): Promise<Fav[]> {
-        const query = `SELECT * FROM achastang_schema.fp_favs WHERE username = '${username}'`;
+        const query = `SELECT * FROM '${db_schema}'.fp_favs WHERE username = '${username}'`;
         const result = await this.pg_pool.query(query);
-        return result.rows.map(row => new Fav(row.username, row.team_id, row.sport));
+        return result.rows.map(row => new Fav(row.username, row.team_id));
     }
 
 }

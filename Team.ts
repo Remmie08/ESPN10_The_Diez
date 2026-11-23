@@ -1,4 +1,8 @@
 import { Pool } from "pg";
+import dotenv from 'dotenv';
+dotenv.config();
+
+const db_schema = process.env.DB_SCHEMA;
 
 export class Team {
     team_id: string;
@@ -29,21 +33,19 @@ export class TeamDAO {
             "team_name" in row ? String(row["team_name"]) : "",
             "country" in row ? String(row["country"]) : "",
             "sport" in row ? String(row["sport"]) : "",
-            "logo" in row ? String(row["logo"]) : "",
+            "logo" in row ? String(row["logo"]) : ""
         );
     }
 
     async searchByName(team_name: string, sport: string) : Promise<Team[]>{
-        let retval: Team;
-        let row: string[];
-        const result = await this.pool.query(`SELECT team_id, team_name, country, sport, logo FROM rmaury_schema.fp_teams WHERE sport='${sport} AND team_name ILIKE '%${team_name}%'`);
+        const result = await this.pool.query(`SELECT team_id, team_name, country, sport, logo FROM '${db_schema}'.fp_teams WHERE sport='${sport}' AND team_name ILIKE '%${team_name}%'`);
         return result.rows.map((row: any) => this.rowToTeam(row));
     }
 
     async findById(team_id: string, sport: string) : Promise<Team | null>{
         let retval: Team;
         let row: string[];
-        const result = await this.pool.query(`SELECT team_id, team_name, country, sport, logo FROM rmaury_schema.fp_teams WHERE team_id='${team_id}' AND sport='${sport}'`);
+        const result = await this.pool.query(`SELECT team_id, team_name, country, sport, logo FROM '${db_schema}'.fp_teams WHERE team_id='${team_id}' AND sport='${sport}'`);
         if(result.rowCount === null || result.rowCount > 0){
             row = result.rows[0];
             return this.rowToTeam(result.rows[0]);

@@ -1,7 +1,7 @@
 import { User } from './User.ts';
-// import { Game } from './Game.ts';
+import { Game } from './Game.ts';
 import { Team } from './Team.ts';
-// import { Favs } from './Favs.ts'
+import { Fav } from './Favs.ts'
  
  export function login(){
     return `
@@ -70,7 +70,7 @@ import { Team } from './Team.ts';
     `
 }
 
-export function get_games(){
+export function get_games(games: Game[], onlyFavorites: boolean){
     return `
     <html>
       <body>

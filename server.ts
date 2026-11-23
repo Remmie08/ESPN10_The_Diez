@@ -5,9 +5,9 @@ import bcrypt from 'bcrypt';
 import session from 'express-session';
 import { get_games, get_teams, get_favorites, login} from './views.ts';
 import { Team, TeamDAO } from './Team.ts';
-// import { Game, GameDAO } from './Game.ts';
+import { Game, GameDAO } from './Game.ts';
 import { User, UserDAO } from './User.ts';
-// import { Favs, FavsDAO } from './Favs.ts';
+import { Fav, FavDAO } from './Favs.ts';
 
 dotenv.config();
 const app = express();
@@ -36,8 +36,8 @@ let pool= new Pool({
 
 const userDAO = new UserDAO(pool);
 const teamDAO = new TeamDAO(pool);
-// const gameDAO = new GameDAO(pool);
-// const favsDAO = new FavsDAO(pool);
+const gameDAO = new GameDAO(pool);
+const favsDAO = new FavDAO(pool);
 
 
 // Validation patterns
@@ -45,19 +45,18 @@ const USERNAME = /^[A-Za-z0-9_]{3,30}$/;
 const TEAM_ID = /^[0-9]{1,10}$/;
 const SPORT = /^(football|basketball|baseball|hockey|soccer)$/; 
 
-// POST /login and POST /register: credentials in the body
 type Credentials = { username?: string; password?: string };
 type AuthRequest = express.Request<unknown, unknown, Credentials>;
 
-// GET /favorites/search?name=...&sport=...
+type GamesQuery = { favorites?: string };
+type GamesRequest = express.Request<{}, unknown, unknown, GamesQuery>;
+
 type TeamSearchQuery = { name?: string; sport?: string };
 type TeamSearchRequest = express.Request<unknown, unknown, unknown, TeamSearchQuery>;
 
-// POST /favorites and DELETE /favorites: which team to add/remove
 type FavBody = { team_id?: string; sport?: string };
 type FavRequest = express.Request<unknown, unknown, FavBody>;
 
-// GET /teams/:team_id?sport=...
 type TeamParams = { team_id: string };
 type TeamPageRequest = express.Request<TeamParams, unknown, unknown, { sport?: string }>;
 
@@ -121,7 +120,21 @@ app.get('/user', (req, res) => {
     res.json({ username: req.session.username });
 });
 
-app.get('/favorites/search', requireLogin, async (req: TeamSearchRequest, res: express.Response) => {
+app.get('/game', requireLogin, async (req: GamesRequest, res) => {
+    try{
+        const onlyFavs = req.query.favorites === 'true';
+        const favs_list = await favsDAO.getFavsByUsername(req.session.username!)
+        const games = onlyFavs
+            ? await gameDAO.getGamesForFavs(favs_list)
+            : await gameDAO.getRecentGames();
+        res.status(200).send(get_games(games, onlyFavs));
+    } catch (err){
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+});
+
+app.get('/favorites', requireLogin, async (req: TeamSearchRequest, res: express.Response) => {
     const { name, sport } = req.query;
 
     if (!name || !sport || !SPORT.test(sport)) {
