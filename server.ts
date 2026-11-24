@@ -3,7 +3,7 @@ import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import session from 'express-session';
-import { get_games, get_teams, get_favorites, login} from './views.ts';
+import { get_games, get_teams, get_team_games, get_favorites, login} from './views.ts';
 import { Team, TeamDAO } from './Team.ts';
 import { Game, GameDAO } from './Game.ts';
 import { User, UserDAO } from './User.ts';
@@ -43,7 +43,6 @@ const favsDAO = new FavDAO(pool);
 // Validation patterns
 const USERNAME = /^[A-Za-z0-9_]{3,30}$/;
 const TEAM_ID = /^[0-9]{1,10}$/;
-const SPORT = /^(football|basketball|baseball|hockey|soccer)$/; 
 
 type Credentials = { username?: string; password?: string };
 type AuthRequest = express.Request<unknown, unknown, Credentials>;
@@ -51,14 +50,14 @@ type AuthRequest = express.Request<unknown, unknown, Credentials>;
 type GamesQuery = { favorites?: string };
 type GamesRequest = express.Request<{}, unknown, unknown, GamesQuery>;
 
-type TeamSearchQuery = { name?: string; sport?: string };
-type TeamSearchRequest = express.Request<unknown, unknown, unknown, TeamSearchQuery>;
+type FavBody = { team_id?: string };
+type FavRequest = express.Request<{}, unknown, FavBody>;
 
-type FavBody = { team_id?: string; sport?: string };
-type FavRequest = express.Request<unknown, unknown, FavBody>;
+type FavPageQuery = { team_name?: string };
+type FavPageRequest = express.Request<{}, unknown, unknown, FavPageQuery>;
 
 type TeamParams = { team_id: string };
-type TeamPageRequest = express.Request<TeamParams, unknown, unknown, { sport?: string }>;
+type TeamPageRequest = express.Request<TeamParams, unknown, unknown>;
 
 function requireLogin(req: express.Request, res: express.Response, next: express.NextFunction) {
     if (!req.session.username) {
@@ -120,30 +119,68 @@ app.get('/user', (req, res) => {
     res.json({ username: req.session.username });
 });
 
-app.get('/game', requireLogin, async (req: GamesRequest, res) => {
-    try{
-        const onlyFavs = req.query.favorites === 'true';
-        const favs_list = await favsDAO.getFavsByUsername(req.session.username!)
-        const games = onlyFavs
-            ? await gameDAO.getGamesForFavs(favs_list)
-            : await gameDAO.getRecentGames();
-        res.status(200).send(get_games(games, onlyFavs));
-    } catch (err){
-        console.error(err);
-        res.status(500).send('Server error');
-    }
+app.get('/games', requireLogin, async (req: GamesRequest, res) => {
+    const onlyFavs = req.query.favorites === 'true';
+    const favs_list = await favsDAO.getFavsByUsername(req.session.username!)
+    const games = onlyFavs
+        ? await gameDAO.getGamesForFavs(favs_list)
+        : await gameDAO.getRecentGames();
+    res.status(200).send(get_games(games, onlyFavs));
 });
 
-app.get('/favorites', requireLogin, async (req: TeamSearchRequest, res: express.Response) => {
-    const { name, sport } = req.query;
+app.get('/favorites', requireLogin, async (req: FavPageRequest, res) => {
+    const username = req.session.username!;
+        const favs = await favsDAO.getFavsByUsername(username);
+        const results = req.query.team_name
+            ? await teamDAO.searchByName(req.query.team_name)
+            : [];
+        res.send(get_favorites(favs, results, req.query.team_name ?? ''));
+});
 
-    if (!name || !sport || !SPORT.test(sport)) {
-        res.status(400).send('Invalid or missing name or sport');
+app.post('/favorites/add', requireLogin, async (req: FavRequest, res) => {
+    const { team_id } = req.body;
+    if (!team_id) {
+        res.status(400).send('Invalid team');
+        return;
+    }
+    await favsDAO.addFav(new Fav(req.session.username!, team_id));
+    res.redirect('/favorites');
+});
+
+app.post('/favorites/remove', requireLogin, async (req, res) => {
+    const { team_id } = req.body;
+    if (!team_id) {
+        res.status(400).send('Invalid team');
+        return;
+    }
+    await favsDAO.removeFav(new Fav(req.session.username!, team_id));
+    res.redirect('/favorites');
+});
+
+app.get('/teams', requireLogin, async (req, res) => {
+    const teams = await teamDAO.getAllTeams();
+    if (!teams) {
+        res.status(404).send('Teams missing');
+        return;
+    }
+    res.status(200).send(get_teams(teams));
+});
+
+app.get('/teams:team_id', requireLogin, async (req: TeamPageRequest, res: express.Response) => {
+    const { team_id } = req.params;
+
+    if (!team_id) {
+        res.status(400).send('Invalid team');
         return;
     }
 
-    const teams = await teamDAO.searchByName(name, sport);
-    res.status(200).json(teams);
+    const team = await teamDAO.findById(team_id);
+    if (!team) {
+        res.status(404).send('Team not found');
+        return;
+    }
+    const games = await gameDAO.getGamesByTeamId(team_id);
+    res.status(200).send(get_team_games(team, games));
 });
 
 app.listen(port, () => {

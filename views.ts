@@ -80,7 +80,7 @@ export function get_games(games: Game[], onlyFavorites: boolean){
     `
 }
 
-export function get_favorites(){
+export function get_favorites(favs: Fav[], team_search: Team[], search_box: string){
     return `
     <html>
       <body>
@@ -90,11 +90,21 @@ export function get_favorites(){
     `
 }
 
-export function get_teams(){
+export function get_teams(team: Team){
     return `
     <html>
       <body>
         <h1>Welcome to the teams Page</h1>
+      </body>
+    </html>
+    `
+}
+
+export function get_team_games(team: Team, games: Game[]){
+    return `
+    <html>
+      <body>
+        <h1>Welcome to the team games Page</h1>
       </body>
     </html>
     `

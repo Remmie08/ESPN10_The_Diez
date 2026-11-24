@@ -41,10 +41,10 @@ export class GameDAO {
         );
     }
 
-    async getGamesByTeamId(team_id: string, sport: string): Promise<Game[]> {
+    async getGamesByTeamId(team_id: string): Promise<Game[]> {
         const query = `
-            SELECT * FROM '${db_schema}'.fp_games
-            WHERE sport = '${sport}' AND (home_team_id = '${team_id}' OR away_team_id = '${team_id}')
+            SELECT * FROM ${db_schema}.fp_games
+            WHERE (home_team_id = '${team_id}' OR away_team_id = '${team_id}')
             ORDER BY match_date DESC
         `;
         const result = await this.pool.query(query);
@@ -59,7 +59,7 @@ export class GameDAO {
             .map(fav => `((home_team_id = '${fav.team_id}' OR away_team_id = '${fav.team_id}'))`)
             .join(" OR ");
         const query = `
-            SELECT * FROM '${db_schema}'.fp_games
+            SELECT * FROM ${db_schema}.fp_games
             WHERE ${conditions}
             ORDER BY match_date DESC
         `;
@@ -69,7 +69,7 @@ export class GameDAO {
 
     async getRecentGames(): Promise<Game[]>{
         const query = `
-            SELECT * FROM '${db_schema}'.fp_games
+            SELECT * FROM ${db_schema}.fp_games
             ORDER BY match_date DESC
         `;
         const result = await this.pool.query(query);

@@ -23,7 +23,7 @@ export class FavDAO {
 
     async addFav(fav: Fav): Promise<void> {
         const query = `
-            INSERT INTO '${db_schema}'.fp_favs (username, team_id, sport)
+            INSERT INTO ${db_schema}.fp_favs (username, team_id, sport)
             VALUES ('${fav.username}', '${fav.team_id}')
             ON CONFLICT DO NOTHING
         `;
@@ -32,14 +32,14 @@ export class FavDAO {
 
     async removeFav(fav: Fav): Promise<void> {
         const query = `
-            DELETE FROM '${db_schema}'.fp_favs
+            DELETE FROM ${db_schema}.fp_favs
             WHERE username = '${fav.username}' AND team_id = '${fav.team_id}'
         `;
         await this.pg_pool.query(query);
     }
 
     async getFavsByUsername(username: string): Promise<Fav[]> {
-        const query = `SELECT * FROM '${db_schema}'.fp_favs WHERE username = '${username}'`;
+        const query = `SELECT * FROM ${db_schema}.fp_favs WHERE username = '${username}'`;
         const result = await this.pg_pool.query(query);
         return result.rows.map(row => new Fav(row.username, row.team_id));
     }

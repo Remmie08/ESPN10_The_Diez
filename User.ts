@@ -24,7 +24,7 @@ export class UserDAO {
     async findByUsername(username: string) : Promise<User | null>{
         let retval: User;
         let row: string[];
-        const result = await this.pool.query(`SELECT username, pword FROM '${db_schema}'.fp_accounts WHERE username='${username}'`);
+        const result = await this.pool.query(`SELECT * FROM ${db_schema}.fp_accounts WHERE username='${username}'`);
         if(result.rowCount === null || result.rowCount > 0){
             row = result.rows[0];
             retval = new User(
@@ -38,7 +38,7 @@ export class UserDAO {
 
     async createUser(user: User): Promise<boolean> {
         const result = await this.pool.query(
-            `INSERT INTO '${db_schema}'.fp_accounts (username, pword)
+            `INSERT INTO ${db_schema}.fp_accounts (username, pword)
              VALUES ('${user.username}', '${user.pword}')
              ON CONFLICT (username) DO NOTHING`
         );
