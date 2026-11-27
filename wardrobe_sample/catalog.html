@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Home Page for Wardrobe Website" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link href="CSS/style.css" rel="stylesheet" />
+
+    <script type="module">
+        /* TODO: See Part 4 of README.md */
+        import App from './JS/catalog.js';
+        const app = new App();
+    </script>
+</head>
+<body>
+   <header>
+      <nav>
+         <ul>
+            <li><a href="home.html">Home</a></li>
+            <li><a href="wardrobe.html">Your Wardrobe</a></li>
+            <li><a href="catalog.html" class="active">Our Catalog</a></li>
+         </ul>
+
+         <div class="nav-right">
+            <a href="index.html">
+                <img src="images/profilepic.png" alt="profile pic icon" class="profile-pic">
+            </a>
+        </div>
+      </nav>
+   </header>
+
+   <main>
+    <div class="clothing-rows">
+        <div class="tops">
+            <h2>Un-Owned</h2>
+            <section id="unowned" class="item-container"></section>
+        </div>
+        <div class="bottoms">
+            <h2>Owned</h2>
+            <section id="owned" class="item-container"></section>
+        </div>
+    </div>
+   </main>
+
+   <aside>
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar-toggle" id="sidebarToggle"><img src="images/menuicon.png"></button>
+        <div class="filter-section">
+            <h4>Clothing Type</h4>
+            <label><input type="checkbox" name="itemFilter" value="shirts"> Shirts</label>
+            <label><input type="checkbox" name="itemFilter" value="jackets"> Jackets</label>
+            <label><input type="checkbox" name="itemFilter" value="pants"> Pants</label>
+            <label><input type="checkbox" name="itemFilter" value="shorts"> Shorts</label>
+            <label><input type="checkbox" name="itemFilter" value="hoodies"> Hoodies</label>
+            <label><input type="checkbox" name="itemFilter" value="sweaters"> Sweaters</label>
+            <label><input type="checkbox" name="itemFilter" value="shoes"> Shoes</label>
+        </div>
+    
+        <div class="filter-section">
+            <h4>Season</h4>
+            <label><input type="checkbox" name="itemFilter" value="spring"> Spring</label>
+            <label><input type="checkbox" name="itemFilter" value="summer"> Summer</label>
+            <label><input type="checkbox" name="itemFilter" value="autumn"> Autumn</label>
+            <label><input type="checkbox" name="itemFilter" value="winter"> Winter</label>
+        </div>
+    
+        <div class="filter-section">
+            <h4>Style</h4>
+            <label><input type="checkbox" name="itemFilter" value="casual"> Casual</label>
+            <label><input type="checkbox" name="itemFilter" value="business casual"> Business Casual</label>
+            <label><input type="checkbox" name="itemFilter" value="formal"> Formal</label>
+            <label><input type="checkbox" name="itemFilter" value="sportwear"> Sportwear</label>
+        </div>
+    </div>
+   </aside>
+
+
+   <script src="JS/sidebar.js"></script>
+</body>
+</html>
