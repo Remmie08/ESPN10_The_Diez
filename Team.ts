@@ -49,13 +49,12 @@ export class TeamDAO {
         else return null;
     }
 
-    async getAllTeams() : Promise<Team | null>{
-        let row: string[];
+    async getAllTeams() : Promise<Team[]>{
+        let teams: Team[] = [];
         const result = await this.pool.query(`SELECT * FROM ${db_schema}.fp_teams`);
-        if(result.rowCount === null || result.rowCount > 0){
-            row = result.rows[0];
-            return this.rowToTeam(result.rows[0]);
+        for (let row of result.rows) {
+            teams.push(this.rowToTeam(row));
         }
-        else return null;
+        return teams;
     }
 }

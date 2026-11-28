@@ -23,7 +23,7 @@ export class FavDAO {
 
     async addFav(fav: Fav): Promise<void> {
         const query = `
-            INSERT INTO ${db_schema}.fp_favs (username, team_id, sport)
+            INSERT INTO ${db_schema}.fp_favs (username, team_id)
             VALUES ('${fav.username}', '${fav.team_id}')
             ON CONFLICT DO NOTHING
         `;

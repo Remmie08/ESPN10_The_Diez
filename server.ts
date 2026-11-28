@@ -11,7 +11,7 @@ import { Fav, FavDAO } from './Favs.ts';
 
 dotenv.config();
 const app = express();
-app.use(express.json());
+app.use(express.json()); 
 app.use(express.static('public'));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
@@ -26,10 +26,10 @@ declare module 'express-session' {
 const port = 3000; // use this port, e.g. localhost:3000
 
 let pool= new Pool({
-    user: 'rmaury', //replace with your username
+    user: process.env.DB_USER, //replace with your username
     host: 'db-pgsql-nyc3-53905-do-user-41991816-0.h.db.ondigitalocean.com',
     database: 'defaultdb',
-    password: process.env.PASSWORD,
+    password: process.env.DB_PASSWORD,
     port: 25060,
     ssl: { rejectUnauthorized: false }
 });
@@ -47,7 +47,7 @@ const TEAM_ID = /^[0-9]{1,10}$/;
 type Credentials = { username?: string; password?: string };
 type AuthRequest = express.Request<unknown, unknown, Credentials>;
 
-type GamesQuery = { favorites?: string };
+type GamesQuery = { favorites?: string; date?: string };
 type GamesRequest = express.Request<{}, unknown, unknown, GamesQuery>;
 
 type FavBody = { team_id?: string };
@@ -125,7 +125,8 @@ app.get('/games', requireLogin, async (req: GamesRequest, res) => {
     const games = onlyFavs
         ? await gameDAO.getGamesForFavs(favs_list)
         : await gameDAO.getRecentGames();
-    res.status(200).send(get_games(games, onlyFavs));
+    const teams = await teamDAO.getAllTeams();
+    res.status(200).send(get_games(games, onlyFavs, teams, req.query.date));
 });
 
 app.get('/favorites', requireLogin, async (req: FavPageRequest, res) => {
@@ -134,7 +135,8 @@ app.get('/favorites', requireLogin, async (req: FavPageRequest, res) => {
         const results = req.query.team_name
             ? await teamDAO.searchByName(req.query.team_name)
             : [];
-        res.send(get_favorites(favs, results, req.query.team_name ?? ''));
+        const teams = await teamDAO.getAllTeams();
+        res.send(get_favorites(favs, results, req.query.team_name ?? '', teams));
 });
 
 app.post('/favorites/add', requireLogin, async (req: FavRequest, res) => {
